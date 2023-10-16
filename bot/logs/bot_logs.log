@@ -1,0 +1,25 @@
+Bot is starting
+Bot is starting
+Bot is starting
+name 'g4f' is not defined
+Bot is starting
+Bot is starting
+Bot is starting
+Bot is starting
+Bot is starting
+Bot is starting
+Bot is starting
+Bot is starting
+Bot is starting
+Bot is starting
+Bot is starting
+All providers failed:
+AItianhu: JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+All providers failed:
+AItianhu: JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+Aibn: RuntimeError: HTTP Error 401: 
+Ylokh: RuntimeError: HTTP Error 522: 
+AItianhuSpace: RuntimeError: HTTP Error 404: 
+GptGo: ClientConnectorCertificateError: Cannot connect to host gptgo.ai:443 ssl:True [SSLCertVerificationError: (1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1006)')]
+Bot is starting
+Bot is starting

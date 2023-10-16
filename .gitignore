@@ -1,0 +1,8 @@
+.env
+.DS_Store
+
+.mypy_cache/
+.vscode/
+.git/
+venv/
+__pycache__/
