@@ -6,13 +6,16 @@ from aiogram.types import Message
 from bot.logs import logger
 from bot.lexicon.lexicon import LEXICON
 from bot.config_data.config import load_whitelist
-from bot.database.database import users_chat_history, users_chat_history_template
+from bot.database.database import ChatUser, ChatMessage, ChatDatabase
 
 # Инициализация роутера
 router: Router = Router()
 
-# Инициализация вайтлиста и истории для него
+# Инициализация вайтлиста
 whitelist: list = load_whitelist()
+
+# Инициализация базы данных
+db = ChatDatabase("chat_history.db")
 
 
 async def gpt_request(message: Message) -> str:
@@ -22,21 +25,18 @@ async def gpt_request(message: Message) -> str:
     answer = ""
 
     try:
-        users_chat_history[message.from_user.id].append(
-            {"role": "user", "content": text}
-        )
+        user = db.get_or_create_user(message.from_user.id)
+        db.add_message(user, "user", text)
 
         response = await g4f.ChatCompletion.create_async(
             model="gpt-3.5-turbo",
-            messages=users_chat_history[message.from_user.id],
+            messages=db.get_user_history(user),
         )
 
         for msg in response:
             answer += msg
 
-        users_chat_history[message.from_user.id].append(
-            {"role": "assistant", "content": answer}
-        )
+        db.add_message(user, "assistant", answer)
 
     except Exception as e:
         logger.warning(e)
@@ -50,8 +50,8 @@ async def gpt_request(message: Message) -> str:
 @router.message(CommandStart())
 async def process_start_command(message: Message):
     await message.answer(LEXICON[message.text])
-    if message.from_user.id not in users_chat_history:
-        users_chat_history[message.from_user.id] = users_chat_history_template
+    user = db.get_or_create_user(message.from_user.id)
+    db.set_user_history(user)
 
 
 # Хэндлер на команду "/help" - предоставить справочную информации
@@ -62,17 +62,17 @@ async def process_help_command(message: Message):
 
 # Хэндлер на команду "/newchat" - очистить историю чата
 @router.message(Command(commands="newchat"))
-async def process_help_command(message: Message):
+async def process_newchat_command(message: Message):
     await message.answer(LEXICON[message.text])
-    users_chat_history[message.from_user.id] = users_chat_history_template
+    user = db.get_or_create_user(message.from_user.id)
+    db.set_user_history(user)
 
 
 # Хэндлер будет выдавать ответ от ChatGPT
 @router.message(F.text)
 async def send_answer(message: Message):
     if str(message.from_user.id) in whitelist:
-        if message.from_user.id not in users_chat_history:
-            users_chat_history[message.from_user.id] = users_chat_history_template
+        db.get_or_create_user(message.from_user.id)
         await message.answer(await gpt_request(message))
     else:
         await message.answer(

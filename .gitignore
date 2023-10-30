@@ -1,6 +1,7 @@
 .env
 .DS_Store
 bot_logs.log
+chat_history.db
 
 .mypy_cache/
 .vscode/
