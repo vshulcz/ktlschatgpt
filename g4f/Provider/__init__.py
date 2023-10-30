@@ -17,21 +17,26 @@ from .ChatgptFree     import ChatgptFree
 from .ChatgptLogin    import ChatgptLogin
 from .ChatgptX        import ChatgptX
 from .Cromicle        import Cromicle
+from .DeepInfra       import DeepInfra
+from .FakeGpt         import FakeGpt
 from .FreeGpt         import FreeGpt
 from .GPTalk          import GPTalk
 from .GptChatly       import GptChatly
 from .GptForLove      import GptForLove
 from .GptGo           import GptGo
 from .GptGod          import GptGod
-from .H2o             import H2o
+from .Hashnode        import Hashnode
 from .Liaobots        import Liaobots
-from .Myshell         import Myshell
+from .Llama2          import Llama2
+from .MyShell         import MyShell
+from .NoowAi          import NoowAi
 from .Opchatgpts      import Opchatgpts
 from .Phind           import Phind
 from .Vercel          import Vercel
 from .Ylokh           import Ylokh
 from .You             import You
 from .Yqcloud         import Yqcloud
+from .GeekGpt         import GeekGpt
 
 from .base_provider  import BaseProvider, AsyncProvider, AsyncGeneratorProvider
 from .retry_provider import RetryProvider
@@ -66,11 +71,13 @@ class ProviderUtils:
         'ChatgptX': ChatgptX,
         'CodeLinkAva': CodeLinkAva,
         'Cromicle': Cromicle,
+        'DeepInfra': DeepInfra,
         'DfeHub': DfeHub,
         'EasyChat': EasyChat,
         'Equing': Equing,
         'FastGpt': FastGpt,
         'Forefront': Forefront,
+        'FakeGpt': FakeGpt,
         'FreeGpt': FreeGpt,
         'GPTalk': GPTalk,
         'GptChatly': GptChatly,
@@ -78,13 +85,17 @@ class ProviderUtils:
         'GptForLove': GptForLove,
         'GptGo': GptGo,
         'GptGod': GptGod,
+        'Hashnode': Hashnode,
         'H2o': H2o,
         'HuggingChat': HuggingChat,
         'Komo': Komo,
         'Liaobots': Liaobots,
+        'Llama2': Llama2,
         'Lockchat': Lockchat,
         'MikuChat': MikuChat,
         'Myshell': Myshell,
+        'MyShell': MyShell,
+        'NoowAi': NoowAi,
         'Opchatgpts': Opchatgpts,
         'OpenAssistant': OpenAssistant,
         'OpenaiChat': OpenaiChat,
@@ -100,6 +111,7 @@ class ProviderUtils:
         'Ylokh': Ylokh,
         'You': You,
         'Yqcloud': Yqcloud,
+        'GeekGpt': GeekGpt,
         
         'BaseProvider': BaseProvider,
         'AsyncProvider': AsyncProvider,
@@ -134,10 +146,12 @@ __all__ = [
     'ChatgptLogin',
     'ChatgptX',
     'Cromicle',
+    'DeepInfra',
     'CodeLinkAva',
     'DfeHub',
     'EasyChat',
     'Forefront',
+    'FakeGpt',
     'FreeGpt',
     'GPTalk',
     'GptChatly',
@@ -145,11 +159,15 @@ __all__ = [
     'GetGpt',
     'GptGo',
     'GptGod',
+    'Hashnode',
     'H2o',
     'HuggingChat',
     'Liaobots',
+    'Llama2',
     'Lockchat',
     'Myshell',
+    'MyShell',
+    'NoowAi',
     'Opchatgpts',
     'Raycast',
     'OpenaiChat',
@@ -166,5 +184,6 @@ __all__ = [
     'Equing',
     'FastGpt',
     'Wuguokai',
-    'V50'
+    'V50',
+    'GeekGpt'
 ]

@@ -1,5 +1,6 @@
 aiogram
 environs
+requests
 browser_cookie3
 requests
 curl_cffi
@@ -7,3 +8,5 @@ js2py
 pycryptodome
 quickjs
 PyExecJS
+numpy
+pillow

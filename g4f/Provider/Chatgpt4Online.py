@@ -8,9 +8,10 @@ from .base_provider import AsyncGeneratorProvider
 
 
 class Chatgpt4Online(AsyncGeneratorProvider):
-    url                   = "https://chatgpt4online.org"
+    url = "https://chatgpt4online.org"
+    supports_message_history = True
     supports_gpt_35_turbo = True
-    working               = True
+    working = False
 
     @classmethod
     async def create_async_generator(
@@ -31,7 +32,8 @@ class Chatgpt4Online(AsyncGeneratorProvider):
                 "newMessage": messages[-1]["content"],
                 "stream": True
             }
-            async with session.post(cls.url + "/wp-json/mwai-ui/v1/chats/submit", json=data, proxy=proxy) as response:
+
+            async with session.post(f"{cls.url}/wp-json/mwai-ui/v1/chats/submit", json=data, proxy=proxy) as response:
                 response.raise_for_status()
                 async for line in response.content:
                     if line.startswith(b"data: "):

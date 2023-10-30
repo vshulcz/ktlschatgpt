@@ -12,8 +12,9 @@ from .base_provider import AsyncGeneratorProvider
 
 
 class Ails(AsyncGeneratorProvider):
-    url: str              = "https://ai.ls"
-    working               = True
+    url = "https://ai.ls"
+    working = False
+    supports_message_history = True
     supports_gpt_35_turbo = True
 
     @staticmethod
@@ -44,8 +45,8 @@ class Ails(AsyncGeneratorProvider):
             "from-url": "https://ai.ls/?chat=1"
         }
         async with ClientSession(
-            headers=headers
-        ) as session:
+                headers=headers
+            ) as session:
             timestamp = _format_timestamp(int(time.time() * 1000))
             json_data = {
                 "model": "gpt-3.5-turbo",
@@ -57,10 +58,10 @@ class Ails(AsyncGeneratorProvider):
                 "s": _hash({"t": timestamp, "m": messages[-1]["content"]}),
             }
             async with session.post(
-                "https://api.caipacity.com/v1/chat/completions",
-                proxy=proxy,
-                json=json_data
-            ) as response:
+                        "https://api.caipacity.com/v1/chat/completions",
+                        proxy=proxy,
+                        json=json_data
+                    ) as response:
                 response.raise_for_status()
                 start = "data: "
                 async for line in response.content:
@@ -68,10 +69,9 @@ class Ails(AsyncGeneratorProvider):
                     if line.startswith(start) and line != "data: [DONE]":
                         line = line[len(start):-1]
                         line = json.loads(line)
-                        token = line["choices"][0]["delta"].get("content")
-                        if token:
+                        if token := line["choices"][0]["delta"].get("content"):
                             if "ai.ls" in token or "ai.ci" in token:
-                                raise Exception("Response Error: " + token)
+                                raise Exception(f"Response Error: {token}")
                             yield token
 
 
@@ -89,12 +89,7 @@ class Ails(AsyncGeneratorProvider):
 
 
 def _hash(json_data: dict[str, str]) -> SHA256:
-    base_string: str = "%s:%s:%s:%s" % (
-        json_data["t"],
-        json_data["m"],
-        "WI,2rU#_r:r~aF4aJ36[.Z(/8Rv93Rf",
-        len(json_data["m"]),
-    )
+    base_string: str = f'{json_data["t"]}:{json_data["m"]}:WI,2rU#_r:r~aF4aJ36[.Z(/8Rv93Rf:{len(json_data["m"])}'
 
     return SHA256(hashlib.sha256(base_string.encode()).hexdigest())
 

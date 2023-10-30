@@ -7,14 +7,14 @@ from ..requests import StreamSession
 from .base_provider import AsyncGeneratorProvider
 
 domains = [
-    'https://k.aifree.site',
-    'https://p.aifree.site'
+    'https://s.aifree.site'
 ]
 
 class FreeGpt(AsyncGeneratorProvider):
-    url                   = "https://freegpts1.aifree.site/"
+    url = "https://freegpts1.aifree.site/"
+    working = True
+    supports_message_history = True
     supports_gpt_35_turbo = True
-    working               = True
 
     @classmethod
     async def create_async_generator(
@@ -42,7 +42,10 @@ class FreeGpt(AsyncGeneratorProvider):
             async with session.post(f"{url}/api/generate", json=data) as response:
                 response.raise_for_status()
                 async for chunk in response.iter_content():
-                    yield chunk.decode()
+                    chunk = chunk.decode()
+                    if chunk == "当前地区当日额度已消耗完":
+                        raise RuntimeError("Rate limit reached")
+                    yield chunk
 
     @classmethod
     @property

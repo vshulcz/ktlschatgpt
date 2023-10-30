@@ -31,6 +31,7 @@ models = {
 class Liaobots(AsyncGeneratorProvider):
     url = "https://liaobots.site"
     working = True
+    supports_message_history = True
     supports_gpt_35_turbo = True
     supports_gpt_4 = True
     _auth_code = None
@@ -49,7 +50,7 @@ class Liaobots(AsyncGeneratorProvider):
             "authority": "liaobots.com",
             "content-type": "application/json",
             "origin": cls.url,
-            "referer": cls.url + "/",
+            "referer": f"{cls.url}/",
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36",
         }
         async with ClientSession(

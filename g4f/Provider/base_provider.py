@@ -15,11 +15,15 @@ class BaseProvider(ABC):
     supports_stream: bool = False
     supports_gpt_35_turbo: bool = False
     supports_gpt_4: bool = False
+    supports_message_history: bool = False
 
     @staticmethod
     @abstractmethod
     def create_completion(
-        model: str, messages: Messages, stream: bool, **kwargs
+        model: str,
+        messages: Messages,
+        stream: bool,
+        **kwargs
     ) -> CreateResult:
         raise NotImplementedError()
 
@@ -31,15 +35,23 @@ class BaseProvider(ABC):
         *,
         loop: AbstractEventLoop = None,
         executor: ThreadPoolExecutor = None,
-        **kwargs,
+        **kwargs
     ) -> str:
         if not loop:
             loop = get_event_loop()
 
         def create_func() -> str:
-            return "".join(cls.create_completion(model, messages, False, **kwargs))
+            return "".join(cls.create_completion(
+                model,
+                messages,
+                False,
+                **kwargs
+            ))
 
-        return await loop.run_in_executor(executor, create_func)
+        return await loop.run_in_executor(
+            executor,
+            create_func
+        )
 
     @classmethod
     @property
@@ -56,7 +68,11 @@ class BaseProvider(ABC):
 class AsyncProvider(BaseProvider):
     @classmethod
     def create_completion(
-        cls, model: str, messages: Messages, stream: bool = False, **kwargs
+        cls,
+        model: str,
+        messages: Messages,
+        stream: bool = False,
+        **kwargs
     ) -> CreateResult:
         loop = get_event_loop()
         coro = cls.create_async(model, messages, **kwargs)
@@ -64,7 +80,11 @@ class AsyncProvider(BaseProvider):
 
     @staticmethod
     @abstractmethod
-    async def create_async(model: str, messages: Messages, **kwargs) -> str:
+    async def create_async(
+        model: str,
+        messages: Messages,
+        **kwargs
+    ) -> str:
         raise NotImplementedError()
 
 
@@ -73,10 +93,19 @@ class AsyncGeneratorProvider(AsyncProvider):
 
     @classmethod
     def create_completion(
-        cls, model: str, messages: Messages, stream: bool = True, **kwargs
+        cls,
+        model: str,
+        messages: Messages,
+        stream: bool = True,
+        **kwargs
     ) -> CreateResult:
         loop = get_event_loop()
-        generator = cls.create_async_generator(model, messages, stream=stream, **kwargs)
+        generator = cls.create_async_generator(
+            model,
+            messages,
+            stream=stream,
+            **kwargs
+        )
         gen = generator.__aiter__()
         while True:
             try:
@@ -85,17 +114,26 @@ class AsyncGeneratorProvider(AsyncProvider):
                 break
 
     @classmethod
-    async def create_async(cls, model: str, messages: Messages, **kwargs) -> str:
-        return "".join(
-            [
-                chunk
-                async for chunk in cls.create_async_generator(
-                    model, messages, stream=False, **kwargs
-                )
-            ]
-        )
+    async def create_async(
+        cls,
+        model: str,
+        messages: Messages,
+        **kwargs
+    ) -> str:
+        return "".join([
+            chunk async for chunk in cls.create_async_generator(
+                model,
+                messages,
+                stream=False,
+                **kwargs
+            )
+        ])
 
     @staticmethod
     @abstractmethod
-    def create_async_generator(model: str, messages: Messages, **kwargs) -> AsyncResult:
+    def create_async_generator(
+        model: str,
+        messages: Messages,
+        **kwargs
+    ) -> AsyncResult:
         raise NotImplementedError()

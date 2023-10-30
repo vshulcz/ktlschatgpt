@@ -9,8 +9,8 @@ from .helper import format_prompt
 
 class GptForLove(AsyncGeneratorProvider):
     url = "https://ai18.gptforlove.com"
-    supports_gpt_35_turbo = True
     working = True
+    supports_gpt_35_turbo = True
 
     @classmethod
     async def create_async_generator(
@@ -55,8 +55,9 @@ class GptForLove(AsyncGeneratorProvider):
                     except:
                         raise RuntimeError(f"Broken line: {line}")
                     if "detail" in line:
-                        content = line["detail"]["choices"][0]["delta"].get("content")
-                        if content:
+                        if content := line["detail"]["choices"][0]["delta"].get(
+                            "content"
+                        ):
                             yield content
                     elif "10分钟内提问超过了5次" in line:
                         raise RuntimeError("Rate limit reached")
@@ -66,7 +67,7 @@ class GptForLove(AsyncGeneratorProvider):
 
 def get_secret() -> str:
     dir = os.path.dirname(__file__)
-    include = dir + '/npm/node_modules/crypto-js/crypto-js'
+    include = f'{dir}/npm/node_modules/crypto-js/crypto-js'
     source = """
 CryptoJS = require({include})
 var k = '14487141bvirvvG'

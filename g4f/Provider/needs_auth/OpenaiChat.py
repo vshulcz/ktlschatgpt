@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-import uuid, json, time
+import uuid, json, time, os
+import tempfile, shutil, asyncio
 
 from ..base_provider import AsyncGeneratorProvider
-from ..helper import get_browser, get_cookies, format_prompt
+from ..helper import get_browser, get_cookies, format_prompt, get_event_loop
 from ...typing import AsyncResult, Messages
 from ...requests import StreamSession
+from ... import debug
 
 class OpenaiChat(AsyncGeneratorProvider):
     url                   = "https://chat.openai.com"
@@ -47,6 +49,7 @@ class OpenaiChat(AsyncGeneratorProvider):
             ]
             data = {
                 "action": "next",
+                "arkose_token": await get_arkose_token(proxy),
                 "messages": messages,
                 "conversation_id": None,
                 "parent_message_id": str(uuid.uuid4()),
@@ -65,7 +68,11 @@ class OpenaiChat(AsyncGeneratorProvider):
                             line = json.loads(line)
                         except:
                             continue
-                        if "message" not in line or "message_type" not in line["message"]["metadata"]:
+                        if "message" not in line:
+                            continue
+                        if "error" in line and line["error"]:
+                            raise RuntimeError(line["error"])
+                        if "message_type" not in line["message"]["metadata"]:
                             continue
                         if line["message"]["metadata"]["message_type"] == "next":
                             new_message = line["message"]["content"]["parts"][0]
@@ -73,26 +80,33 @@ class OpenaiChat(AsyncGeneratorProvider):
                             last_message = new_message
 
     @classmethod
-    def browse_access_token(cls) -> str:
-        try:
-            from selenium.webdriver.common.by import By
-            from selenium.webdriver.support.ui import WebDriverWait
-            from selenium.webdriver.support import expected_conditions as EC
+    async def browse_access_token(cls) -> str:
+        def browse() -> str:
+            try:
+                from selenium.webdriver.common.by import By
+                from selenium.webdriver.support.ui import WebDriverWait
+                from selenium.webdriver.support import expected_conditions as EC
 
-            driver = get_browser()
-        except ImportError:
-            return
+                driver = get_browser()
+            except ImportError:
+                return
 
-        driver.get(f"{cls.url}/")
-        try:
-            WebDriverWait(driver, 1200).until(
-                EC.presence_of_element_located((By.ID, "prompt-textarea"))
-            )
-            javascript = "return (await (await fetch('/api/auth/session')).json())['accessToken']"
-            return driver.execute_script(javascript)
-        finally:
-            time.sleep(1)
-            driver.quit()
+            driver.get(f"{cls.url}/")
+            try:
+                WebDriverWait(driver, 1200).until(
+                    EC.presence_of_element_located((By.ID, "prompt-textarea"))
+                )
+                javascript = "return (await (await fetch('/api/auth/session')).json())['accessToken']"
+                return driver.execute_script(javascript)
+            finally:
+                driver.close()
+                time.sleep(0.1)
+                driver.quit()
+        loop = get_event_loop()
+        return await loop.run_in_executor(
+            None,
+            browse
+        )
 
     @classmethod
     async def fetch_access_token(cls, cookies: dict, proxies: dict = None) -> str:
@@ -110,7 +124,7 @@ class OpenaiChat(AsyncGeneratorProvider):
             if cookies:
                 cls._access_token = await cls.fetch_access_token(cookies, proxies)
         if not cls._access_token:
-            cls._access_token = cls.browse_access_token()
+            cls._access_token = await cls.browse_access_token()
         if not cls._access_token:
             raise RuntimeError("Read access token failed")
         return cls._access_token
@@ -128,3 +142,46 @@ class OpenaiChat(AsyncGeneratorProvider):
         ]
         param = ", ".join([": ".join(p) for p in params])
         return f"g4f.provider.{cls.__name__} supports: ({param})"
+    
+async def get_arkose_token(proxy: str = None) -> str:
+    node = shutil.which("node")
+    if not node:
+        if debug.logging:
+            print('OpenaiChat: "node" not found')
+        return
+    dir = os.path.dirname(os.path.dirname(__file__))
+    include = f'{dir}/npm/node_modules/funcaptcha'
+    config = {
+        "pkey": "3D86FBBA-9D22-402A-B512-3420086BA6CC",
+        "surl": "https://tcr9i.chat.openai.com",
+        "data": {},
+        "headers": {
+            "User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36'
+        },
+        "site": "https://chat.openai.com",
+        "proxy": proxy
+    }
+    source = """
+fun = require({include})
+config = {config}
+fun.getToken(config).then(token => {
+    console.log(token.token)
+})
+"""
+    source = source.replace('{include}', json.dumps(include))
+    source = source.replace('{config}', json.dumps(config))
+    tmp = tempfile.NamedTemporaryFile(delete=False)
+    tmp.write(source.encode())
+    tmp.close()
+    try:
+        p = await asyncio.create_subprocess_exec(
+            node, tmp.name,
+            stderr=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await p.communicate()
+        if p.returncode == 0:
+            return stdout.decode()
+        raise RuntimeError(f"Exec Error: {stderr.decode()}")
+    finally:
+        os.unlink(tmp.name)

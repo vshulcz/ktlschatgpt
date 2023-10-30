@@ -8,7 +8,8 @@ from .base_provider import AsyncGeneratorProvider
 
 class Acytoo(AsyncGeneratorProvider):
     url                   = 'https://chat.acytoo.com'
-    working               = True
+    working               = False
+    supports_message_history = True
     supports_gpt_35_turbo = True
 
     @classmethod

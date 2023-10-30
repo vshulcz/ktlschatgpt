@@ -1,13 +1,12 @@
 from __future__ import annotations
-from requests import get
-from g4f.models import Model, ModelUtils
-from .Provider import BaseProvider, RetryProvider
-from .typing import Messages, CreateResult, Union, List
-from .debug import logging
+from requests   import get
+from .models    import Model, ModelUtils, _all_models
+from .Provider  import BaseProvider, RetryProvider
+from .typing    import Messages, CreateResult, Union, List
+from .          import debug
 
-version = '0.1.6.4'
+version       = '0.1.7.8'
 version_check = True
-
 
 def check_pypi_version() -> None:
     try:
@@ -20,11 +19,11 @@ def check_pypi_version() -> None:
     except Exception as e:
         print(f'Failed to check g4f pypi version: {e}')
 
-
 def get_model_and_provider(model    : Union[Model, str], 
                            provider : Union[type[BaseProvider], None], 
                            stream   : bool,
-                           ignored  : List[str] = None) -> tuple[Model, type[BaseProvider]]:
+                           ignored  : List[str] = None,
+                           ignore_working: bool = False) -> tuple[Model, type[BaseProvider]]:
     
     if isinstance(model, str):
         if model in ModelUtils.convert:
@@ -41,13 +40,13 @@ def get_model_and_provider(model    : Union[Model, str],
     if not provider:
         raise RuntimeError(f'No provider found for model: {model}')
 
-    if not provider.working:
+    if not provider.working and not ignore_working:
         raise RuntimeError(f'{provider.__name__} is not working')
 
     if not provider.supports_stream and stream:
         raise ValueError(f'{provider.__name__} does not support "stream" argument')
 
-    if logging:
+    if debug.logging:
         print(f'Using {provider.__name__} provider')
 
     return model, provider
@@ -55,14 +54,15 @@ def get_model_and_provider(model    : Union[Model, str],
 
 class ChatCompletion:
     @staticmethod
-    def create(model: Union[Model, str],
+    def create(model    : Union[Model, str],
                messages : Messages,
                provider : Union[type[BaseProvider], None] = None,
                stream   : bool = False,
                auth     : Union[str, None] = None,
-               ignored  : List[str] = None, **kwargs) -> Union[CreateResult, str]:
+               ignored  : List[str] = None, 
+               ignore_working: bool = False, **kwargs) -> Union[CreateResult, str]:
 
-        model, provider = get_model_and_provider(model, provider, stream, ignored)
+        model, provider = get_model_and_provider(model, provider, stream, ignored, ignore_working)
 
         if provider.needs_auth and not auth:
             raise ValueError(
@@ -75,31 +75,26 @@ class ChatCompletion:
         return result if stream else ''.join(result)
 
     @staticmethod
-    async def create_async(
-        model   : Union[Model, str],
-        messages: Messages,
-        provider: Union[type[BaseProvider], None] = None,
-        stream  : bool = False,
-        ignored  : List[str] = None, **kwargs) -> str:
+    async def create_async(model    : Union[Model, str],
+                           messages : Messages,
+                           provider : Union[type[BaseProvider], None] = None,
+                           stream   : bool = False,
+                           ignored  : List[str] = None, **kwargs) -> str:
         
         if stream:
-            raise ValueError(f'"create_async" does not support "stream" argument')
+            raise ValueError('"create_async" does not support "stream" argument')
 
         model, provider = get_model_and_provider(model, provider, False, ignored)
 
         return await provider.create_async(model.name, messages, **kwargs)
 
-
 class Completion:
     @staticmethod
-    def create(
-        model: str,
-        prompt: str,
-        provider: Union[type[BaseProvider], None] = None,
-        stream: bool = False,
-        ignored  : List[str] = None,
-        **kwargs
-    ) -> Union[CreateResult, str]:
+    def create(model    : Union[Model, str],
+               prompt   : str,
+               provider : Union[type[BaseProvider], None] = None,
+               stream   : bool = False,
+               ignored  : List[str] = None, **kwargs) -> Union[CreateResult, str]:
 
         allowed_models = [
             'code-davinci-002',
