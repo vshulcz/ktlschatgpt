@@ -1,7 +1,6 @@
 .env
 .DS_Store
-
-bot/logs/bot_log.log
+bot_logs.log
 
 .mypy_cache/
 .vscode/

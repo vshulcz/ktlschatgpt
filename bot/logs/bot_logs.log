@@ -37,3 +37,5 @@ You: RuntimeError: HTTP Error 403:
 ChatgptX: ClientConnectorCertificateError: Cannot connect to host chatgptx.de:443 ssl:True [SSLCertVerificationError: (1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1006)')]
 Phind: RuntimeError: HTTP Error 403: 
 Bot is starting
+Bot is starting
+Bot is starting
