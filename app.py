@@ -1,5 +1,5 @@
 import asyncio
-import g4f
+import gpt4free
 
 from bot import bot
 

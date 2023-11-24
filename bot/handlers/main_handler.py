@@ -1,4 +1,4 @@
-import g4f
+from gpt4free.g4f import ChatCompletion
 
 from aiogram import Router, F
 from aiogram.filters import Command, CommandStart
@@ -28,7 +28,7 @@ async def gpt_request(message: Message) -> str:
         user = db.get_or_create_user(message.from_user.id)
         db.add_message(user, "user", text)
 
-        response = await g4f.ChatCompletion.create_async(
+        response = await ChatCompletion.create_async(
             model="gpt-3.5-turbo",
             messages=db.get_user_history(user),
         )

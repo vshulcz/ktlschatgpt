@@ -8,5 +8,9 @@ js2py
 pycryptodome
 quickjs
 PyExecJS
+platformdirs
 numpy
 pillow
+py-arkose-generator
+asyncstdlib
+async-property
